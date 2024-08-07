@@ -10,10 +10,38 @@ const Player_SEASON14 = () => {
     queryFn: queryPerson,
   });
 
-  const loadout = player?.Profiles.athena.Loadouts.find(
-    (l) => l.ID === player?.Profiles.athena.Attributes["loadouts"][0]
+  const hasPlayedBefore =
+    JSON.parse(
+      (
+        Object.values(player?.snapshot.AthenaProfile.Attributes || []).find(
+          (a) => a.Key == "xp"
+        ) || {
+          ValueJSON: "",
+        }
+      ).ValueJSON || '"0"'
+    ) != "0";
+
+  const loadoutIds: string[] = JSON.parse(
+    (
+      Object.values(player?.snapshot.AthenaProfile.Attributes || []).find(
+        (a) => a.Key == "loadouts"
+      ) || {
+        ValueJSON: "[]",
+      }
+    ).ValueJSON || "[]"
   );
-  const character = player?.Profiles.athena.Items[loadout?.CharacterID || ""];
+
+  const loadoutId = loadoutIds[0];
+  const loadout = player?.snapshot.AthenaProfile.Loadouts[loadoutId];
+  const character = player?.snapshot.AthenaProfile.Items[
+    loadout?.CharacterID || ""
+  ] || {
+    TemplateID: "AthenaCharacter:CID_001_Athena_Commando_F_Default",
+  };
+
+  if (!character) return null;
+  const pureId =
+    character.TemplateID.split(":")[1] || "CID_001_Athena_Commando_F_Default";
 
   return (
     <motion.div
@@ -26,15 +54,15 @@ const Player_SEASON14 = () => {
       <div
         className="avatar"
         style={{
-          backgroundImage: `url(https://fortnite-api.com/images/cosmetics/br/${character?.Template.replace(
+          backgroundImage: `url(https://fortnite-api.com/images/cosmetics/br/${pureId.replace(
             "_Retrac",
             ""
           )}/icon.png)`,
         }}
       />
       <div className="information">
-        <span>Welcome</span>
-        <span className="name">{player?.Account.DisplayName || "Player"}</span>
+        <span>{hasPlayedBefore ? "Welcome back" : "Welcome"}</span>
+        <span className="name">{player?.snapshot.DisplayName || "Player"}</span>
       </div>
     </motion.div>
   );

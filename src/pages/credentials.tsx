@@ -17,8 +17,7 @@ const CredentialsPage = () => {
 
   const handleHashChange = async () => {
     const code = window.location.hash.slice(1);
-    if (!code.startsWith("auth")) return;
-    console.log("hash change", window.location.hash);
+    if (!code.startsWith("auth:")) return;
 
     const token = code.split(":")[1];
 
@@ -28,17 +27,6 @@ const CredentialsPage = () => {
     queryClient.setQueryData(["player"], player.data);
     userControl.new_token(token);
     window.location.hash = "";
-
-    if (code.includes("onboard")) {
-      console.log("onboard");
-      navigate({
-        to: "/onboard",
-      });
-      return;
-    }
-
-    console.log("redirecting to /snow");
-
     navigate({
       to: "/snow",
     });
