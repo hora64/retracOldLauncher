@@ -4,19 +4,16 @@ import { useUserControl } from "src/state/user";
 import { useConfigControl } from "src/state/config";
 import { useLibraryControl } from "src/state/library";
 import { motion } from "framer-motion";
-import { downloadFile } from "src/lib/tauri";
+import { deleteFile, downloadFile } from "src/lib/tauri";
 import { hasPakInstalled, importBuildFromDialog } from "src/lib/import";
 import { queryPerson } from "src/external/query";
 import { useQuery } from "@tanstack/react-query";
 import { message } from "@tauri-apps/api/dialog";
-import { appWindow } from "@tauri-apps/api/window";
 
 import { FaArrowRightFromBracket, FaCircleChevronDown } from "react-icons/fa6";
 import "src/styles/settings.css";
 import Toggle from "src/components/toggle";
 import Input from "../components/input";
-import { useEffect } from "react";
-import { isDevBuildMode } from "src/external/client";
 
 const Settings = () => {
   const { data: player } = useQuery({
@@ -60,7 +57,18 @@ const Settings = () => {
     configControl.setTheme("theme" + theme);
   };
 
-  const disable_themes = player?.Account.State.Packages.length === 0;
+  const disable_themes = ((): boolean => {
+    if (!player) return true;
+    const discord = player.snapshot.Discord;
+
+    if (discord.HasRetracUltimateRole) return false;
+    if (discord.HasRetracPlusRole) return false;
+    if (discord.HasCrystalDonatorRole) return false;
+    if (discord.HasLlamaDonatorRole) return false;
+    if (discord.HasContentCreatorRole) return false;
+    if (discord.LastBoostedAt != "") return false;
+    return true;
+  })();
 
   const toggle_party = () => {
     const root = document.getElementById("root");
@@ -108,10 +116,6 @@ const Settings = () => {
 
     libraryControl.setPakValid(await hasPakInstalled(false));
   };
-
-  useEffect(() => {
-    appWindow.setAlwaysOnTop(configControl.always_on_top);
-  }, []);
 
   return (
     <motion.div
@@ -172,36 +176,6 @@ const Settings = () => {
             className="theme five"
             onClick={() => setTheme("5")}
           ></button>
-          {/* <button
-            disabled={disable_themes}
-            className="theme six"
-            onClick={() => setTheme("6")}
-          ></button>
-          <button
-            disabled={disable_themes}
-            className="theme seven"
-            onClick={() => setTheme("7")}
-          ></button>
-          <button
-            disabled={disable_themes}
-            className="theme eight"
-            onClick={() => setTheme("8")}
-          ></button>
-          <button
-            disabled={disable_themes}
-            className="theme nine"
-            onClick={() => setTheme("9")}
-          ></button>
-          <button
-            disabled={disable_themes}
-            className="theme ten"
-            onClick={() => setTheme("10")}
-          ></button>
-          <button
-            disabled={disable_themes}
-            className="theme eleven"
-            onClick={() => setTheme("11")}
-          ></button> */}
         </div>
 
         <div className="fortniteLocationContainer">
@@ -220,16 +194,42 @@ const Settings = () => {
         </div>
 
         <Toggle
-          title="Always On Top"
-          description="Keep the launcher on top of other windows."
-          active={configControl.always_on_top}
-          onToggle={(v) => {
-            appWindow.setAlwaysOnTop(v);
-            configControl.set_always_on_top(v);
+          title="Bubble Builds"
+          description="Reduce the quality of builds for aesthetics and performance."
+          active={configControl.bubble_builds}
+          onToggle={async (v) => {
+            configControl.set_bubble_builds(v);
+            if (!v) {
+              await deleteFile(
+                `${
+                  libraryControl.getCurrentEntry()?.path
+                }\\FortniteGame\\Content\\Paks\\pakchunkRetracBubble-WindowsClient_P.pak`
+              );
+              await deleteFile(
+                `${
+                  libraryControl.getCurrentEntry()?.path
+                }\\FortniteGame\\Content\\Paks\\pakchunkRetracBubble-WindowsClient_P.sig`
+              );
+            } else {
+              await downloadFile(
+                "https://cdn.0xkaede.xyz/data",
+                "pakchunkRetracBubble-WindowsClient_P.pak",
+                `${
+                  libraryControl.getCurrentEntry()?.path
+                }\\FortniteGame\\Content\\Paks\\pakchunkRetracBubble-WindowsClient_P.pak`
+              );
+              await downloadFile(
+                "https://cdn.0xkaede.xyz/data",
+                "pakchunkRetracBubble-WindowsClient_P.sig",
+                `${
+                  libraryControl.getCurrentEntry()?.path
+                }\\FortniteGame\\Content\\Paks\\pakchunkRetracBubble-WindowsClient_P.sig`
+              );
+            }
           }}
         />
 
-        {/* <Toggle
+        <Toggle
           title="Reset on Release"
           description="Use this to reset builds on release."
           active={configControl.reset_on_release}
@@ -241,30 +241,26 @@ const Settings = () => {
           description="Prevent accidental pre-edits when turbo building."
           active={configControl.disable_pre_edit}
           onToggle={(v) => configControl.set_disable_pre_edit(v)}
-        /> */}
+        />
 
-        {isDevBuildMode && (
-          <>
-            <Toggle
-              title="Only One Session"
-              description="Prevent multiple sessions from being active at the same time."
-              active={configControl.one_session}
-              onToggle={(v) => configControl.set_one_session(v)}
-            />
+        <Toggle
+          title="Only One Session"
+          description="Prevent multiple sessions from being active at the same time."
+          active={configControl.one_session}
+          onToggle={(v) => configControl.set_one_session(v)}
+        />
 
-            <Toggle
-              title="Use Localhost"
-              description="Do not use this unless you know what you are doing."
-              active={configControl.use_localhost}
-              onToggle={(v) => {
-                configControl.set_use_localhost(v);
-                if (!v) {
-                  configControl.set_use_passwordless(false);
-                }
-              }}
-            />
-          </>
-        )}
+        <Toggle
+          title="Use Localhost"
+          description="Do not use this unless you know what you are doing."
+          active={configControl.use_localhost}
+          onToggle={(v) => {
+            configControl.set_use_localhost(v);
+            if (!v) {
+              configControl.set_use_passwordless(false);
+            }
+          }}
+        />
 
         {configControl.use_localhost && (
           <Toggle
