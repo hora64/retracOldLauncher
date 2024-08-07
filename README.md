@@ -1,6 +1,8 @@
 # Retrac Launcher
 
-> A minimal Fortnite launcher solution made for Retrac that is compatible with [Snow Backend](https://github.com/ectrc/snow).
-![image](https://github.com/retracfn/launcher/assets/13946988/36a74400-92d4-44cc-a8a0-482f148f7080)
-![image](https://github.com/retracfn/launcher/assets/13946988/4f1daf9c-1712-47d0-ac36-5af982a72c02)
-![image](https://github.com/retracfn/launcher/assets/13946988/8ae08362-06fa-4683-91be-8e30be476a52)
+> A minimal Fortnite launcher solution made for Retrac.
+
+![image](https://github.com/user-attachments/assets/583195f0-420a-4033-9b6b-4fd7bdebbf8b)
+![image](https://github.com/user-attachments/assets/801e5db6-32ee-4395-8290-7c4eb07cba33)
+![image](https://github.com/user-attachments/assets/4ed1f87c-2f3c-45ce-92d5-20f215312840)
+![image](https://github.com/user-attachments/assets/28940df9-5882-4210-affd-227064606d79)

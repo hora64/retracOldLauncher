@@ -16,21 +16,36 @@ import Settings from "src/pages/settings";
 import Offline from "src/pages/offline";
 import { FaCog } from "react-icons/fa";
 
-enum ERole {
-  None = "Member",
-  ContentCreator = "Content Creator",
-  LlamaDonator = "Llama Donator",
-  CrystalDonator = "Crystal Donator",
-  RetracPlusDonator = "Retrac Plus Donator",
-  RetracUltimateDonator = "Ultimate Donator",
-  ServerBooster = "Server Booster",
-}
+const ROLE_TIERS = [
+  "booster",
+  "fever",
+  "pubg",
+  "gamer",
+  "llama",
+  "creator",
+  "crystal",
+  "ultimate",
+];
+const ROLES = {
+  booster: "Server Booster",
+  fever: "Fever Donator",
+  pubg: "PUBG Donator",
+  gamer: "Gamer Donator",
+  llama: "Llama Donator",
+  creator: "Content Creator",
+  crystal: "Crystal Donator",
+  ultimate: "Ultimate Donator",
+  "": "Member",
+};
 
 const Frame = () => {
   const config = useConfigControl();
   const libraryControl = useLibraryControl();
 
-  const [settingsOpen] = useStates((s) => [s.settings_page_active]);
+  const [settingsOpen, setSettingsOpen] = useStates((s) => [
+    s.settings_page_active,
+    s.set_settings_page_active,
+  ]);
 
   const { data: launcherStats, error } = useQuery<LauncherStats>({
     queryKey: ["launcher"],
@@ -57,18 +72,13 @@ const Frame = () => {
     })();
   }, [libraryControl.entries]);
 
-  const bestRole = ((): ERole => {
-    if (!player) return ERole.None;
-    const discord = player.snapshot.Discord;
-
-    if (discord.HasRetracUltimateRole) return ERole.RetracUltimateDonator;
-    if (discord.HasRetracPlusRole) return ERole.RetracPlusDonator;
-    if (discord.HasCrystalDonatorRole) return ERole.CrystalDonator;
-    if (discord.HasLlamaDonatorRole) return ERole.LlamaDonator;
-    if (discord.HasContentCreatorRole) return ERole.ContentCreator;
-    if (discord.LastBoostedAt != "") return ERole.ServerBooster;
-    return ERole.None;
-  })();
+  const bestRole = player?.Account.State.Packages.reduce((acc, curr) => {
+    if (ROLE_TIERS.indexOf(curr) > ROLE_TIERS.indexOf(acc)) {
+      return curr;
+    }
+    return acc;
+  }, "");
+  const role = ROLES[bestRole as keyof typeof ROLES];
 
   return (
     <div className="tauriFrameContainer">
@@ -81,19 +91,21 @@ const Frame = () => {
           {!config.drawer_open && (
             <button
               data-tauri-drag-region
-              onClick={() => appWindow.minimize()}
+              onClick={() => setSettingsOpen(true)}
               className="tauriFrameAction"
             >
               <FaCog />
             </button>
           )}
-          <button
-            data-tauri-drag-region
-            onClick={() => appWindow.minimize()}
-            className="tauriFrameAction"
-          >
-            <HiMinusSm />
-          </button>
+          {config.drawer_open && (
+            <button
+              data-tauri-drag-region
+              onClick={() => appWindow.minimize()}
+              className="tauriFrameAction"
+            >
+              <HiMinusSm />
+            </button>
+          )}
           <button
             data-tauri-drag-region
             onClick={() => appWindow.close()}
@@ -109,8 +121,8 @@ const Frame = () => {
             </span>
             <s></s>
             <span data-tauri-drag-region>
-              <strong className={bestRole} data-tauri-drag-region>
-                {bestRole}
+              <strong className={role} data-tauri-drag-region>
+                {role}
               </strong>
             </span>
           </div>

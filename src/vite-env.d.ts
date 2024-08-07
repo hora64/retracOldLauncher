@@ -1,137 +1,69 @@
 /// <reference types="vite/client" />
 
-type Variant = {
-  ID: string;
-  ItemID: string;
-  Channel: string;
-  Owned: string[];
-  Active: string;
-};
-
 type Item = {
   ID: string;
-  TemplateID: string;
-  Quantity: number;
-  Favorite: boolean;
-  HasSeen: boolean;
-  Variants: Variant[];
   ProfileType: string;
-};
-
-type Gift = {
-  ID: string;
-  ProfileID: string;
-  TemplateID: string;
+  Attributes: Record<string, any>;
+  BackendValue: string;
+  Template: string;
   Quantity: number;
-  FromID: string;
-  GiftedAt: number;
-  Message: string;
-  Loot: Item[];
-};
-
-type Quest = {
-  ID: string;
-  ProfileID: string;
-  TemplateID: string;
-  State: string;
-  Objectives: string[];
-  ObjectiveCounts: number[];
-  BundleID: string;
-  ScheduleID: string;
-};
-
-type Attribute = {
-  ID: string;
-  ProfileID: string;
-  Key: string;
-  ValueJSON: string;
-  Type: string;
 };
 
 type Loadout = {
   ID: string;
-  PersonID: string;
   ProfileID: string;
-  TemplateID: string;
   LockerName: string;
-  BannerID: string;
-  BannerColorID: string;
   CharacterID: string;
-  PickaxeID: string;
   BackpackID: string;
+  PickaxeID: string;
   GliderID: string;
-  DanceID: string[];
-  ItemWrapID: string[];
   ContrailID: string;
   LoadingScreenID: string;
   MusicPackID: string;
+  DanceIDs: string[6];
+  WrapIDs: string[7];
+  BannerColour: string;
+  BannerIcon: string;
 };
 
 type Profile = {
-  ID: string;
   Items: Record<string, Item>;
-  Gifts: Record<string, Gift>;
-  Quests: Record<string, Quest>;
-  Attributes: Record<string, Attribute>;
-  Loadouts: Record<string, Loadout>;
-  Revision: number;
-  Type: string;
+  Loadouts: Loadout[];
+  Attributes: Record<string, any>;
 };
 
-type DiscordAccount = {
-  ID: string;
-  PersonID: string;
-  Username: string;
-  Avatar: string;
-  Banner: string;
-  AccessToken: string;
-  RefreshToken: string;
-  HasContentCreatorRole: boolean;
-  HasCrystalDonatorRole: boolean;
-  HasLlamaDonatorRole: boolean;
-  HasRetracPlusRole: boolean;
-  HasRetracUltimateRole: boolean;
-  LastBoostedAt: string;
-};
-
-type Ban = {
-  ID: string;
-  PersonID: string;
-  IssuedBy: string;
-  Expiry: string;
-  Reason: string;
-};
-
-type SeasonStat = {
-  ID: string;
-  PersonID: string;
+type Stat = {
   Season: number;
-  SeasonXP: number;
+  XP: number;
   BookXP: number;
-  BookPurchased: boolean;
-  Hype: number;
+  Premium: bool;
+  TierFreeClaimed: number;
+  TierPaidClaimed: number;
+  LevelClaimed: number;
 };
 
-type Person = {
+type User = {
   ID: string;
-  DisplayName: string;
-  RefundTickets: number;
-  Permissions: number;
-  AthenaProfile: Profile;
-  CommonCoreProfile: Profile;
-  CommonPublicProfile: Profile;
-  Profile0Profile: Profile;
-  CollectionsProfile: Profile;
-  CreativeProfile: Profile;
-  CurrentSeasonStats: SeasonStat;
-  AllSeasonStats: SeasonStat[];
-  BanHistory: Ban[];
-  Discord: DiscordAccount;
-  Relationships: Record<string, Relationship>;
-  Parties: Record<string, Party>;
-  Invites: Record<string, Invite>;
-  Intentions: Record<string, Intention>;
+  Account: {
+    DisplayName: string;
+    Discord: {
+      Username: string;
+    };
+    Stats: Record<int, Stat>;
+    State: {
+      Packages: string[];
+      ClaimedPackages: string[];
+    };
+  };
+  Profiles: {
+    athena: Profile;
+    common_core: Profile;
+  };
 };
+
+type PersonResponse = User;
+
+////
 
 type LibraryEntry = {
   releaseVersion: number;
@@ -153,16 +85,6 @@ type LauncherVersion = {
   current_version: string;
 };
 
-type PersonResponse = {
-  snapshot: Person;
-  season: {
-    level: number;
-    xp: number;
-    bookLevel: number;
-    bookXp: number;
-  };
-};
-
 type int = number;
 type bool = boolean;
 
@@ -174,28 +96,169 @@ type DownloadProgress_rust = {
 };
 
 type ServersResponse = {
-  Buckets: Record<string, Bucket>;
+  buckets: Bucket[];
 };
 
 type Bucket = {
-  Constraint: string;
-  CustomKey: string;
-  Version: string;
-  Servers: Record<string, Server>;
-  Queue: string[];
+  constraint: string;
+  customKey: string;
+  version: string;
+  servers: Server[];
 };
 
-enum ServerStatus {
-  Loading = 0,
-  Joinable = 1,
-  Closed = 2,
-}
-
 type Server = {
+  id: string;
+  bucket_id: string;
+  status: ServerStatus;
+  partyIdsAssinged: string[];
+  playercount: number;
+};
+
+type PlayersInfoResponse = Array<{
+  id: string;
+  displayName: string;
+}>;
+
+type LeaderboardResponse = Array<{
+  accountId: string;
+  eliminations: number;
+  wins: number;
+  score: number;
+}>;
+
+type Catalog = {
+  Date: string;
+  Storefronts: Section[];
+};
+
+type Section = {
   ID: string;
-  Address: string;
-  Port: number;
-  Constraint: string;
-  Status: ServerStatus;
-  Parties: string[];
+  CatalogID: string;
+  Name: string;
+  // Offers: Offer[];
+  DBMtxOffers: Offer[];
+  // moneyOffers: Offer[];
+  // kitOffers: Offer[];
+  // passOffers: Offer[];
+};
+
+type Offer = {
+  ID: string;
+  StorefrontID: string;
+  Grants: Reward[];
+  Price: {
+    ID: string;
+    SaleType: string;
+    OriginalPrice: number;
+    FinalPrice: number;
+  };
+  Display: {
+    ID: string;
+    ShopOfferID: string;
+    Title: string;
+    Description: string;
+    ShortDescription: string;
+    LongDescription: string;
+  };
+  Meta: {
+    ID: string;
+    Title: string;
+    Description: string;
+    ShortDescription: string;
+    LongDescription: string;
+    Category: string;
+    TileSize: string;
+    SectionID: string;
+    DisplayAssetPath: string;
+    NewDisplayAssetPath: string;
+    BannerOverride: string;
+    PriorityCategory: number;
+    PriorityStorefront: number;
+    Refundable: bool;
+    Giftable: bool;
+    CurrencyAnalyticsName: string;
+    TotalMtxQuantity: number;
+    ExtraMtxQuantity: number;
+    FeaturedImageURL: string;
+    IconSize: string;
+  };
+};
+
+type Reward = {
+  ID: string;
+  Template: string;
+  BackendValue: string;
+  Quantity: number;
+};
+
+type FortniteApiResult = {
+  Cosmetic: {
+    id: string;
+    name: string;
+    description: string;
+    type: {
+      value: string;
+      displayValue: string;
+      backendValue: string;
+    };
+    rarity: {
+      value: string;
+      displayValue: string;
+      backendValue: string;
+    };
+    set: {
+      value: string;
+      text: string;
+      backendValue: string;
+    };
+    images: {
+      smallIcon: string;
+      icon: string;
+      featured: string;
+      lego: {
+        small: string;
+        large: string;
+        wide: string;
+      };
+    };
+    variants: Array<{
+      channel: string;
+      type: string;
+      options: Array<{
+        tag: string;
+        name: string;
+        image: string;
+      }>;
+    }>;
+    gameplayTags: string[];
+    path: string;
+    added: string;
+  };
+};
+
+//
+
+type RetracApiResponse = {
+  sets: Record<
+    string,
+    {
+      backendNmae: string;
+      displayName: string;
+      items: FortniteApiResult[];
+    }
+  >;
+  cosmetics: Record<string, FortniteApiResult>;
+};
+
+type ContentPagesResult = {
+  battleroyalenewsv2?: {
+    news: {
+      motds: Array<{
+        id: string;
+        image: string;
+        title: string;
+        body: string;
+      }>;
+    };
+  };
 };
