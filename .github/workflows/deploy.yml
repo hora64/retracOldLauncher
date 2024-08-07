@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch: # Add this line to enable the manual trigger
 
 jobs:
   release:
@@ -37,7 +38,6 @@ jobs:
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
-
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
