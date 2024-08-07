@@ -27,23 +27,32 @@ const Leaderboards = () => {
     queryFn: queryLeaderboard,
   });
 
-  const readLeaderboard = leaderboard || [];
-  const lAccountIds = readLeaderboard.map((x) => x.accountId);
-
   useEffect(() => {
     rfn();
   }, []);
 
-  const playerIdx = lAccountIds.indexOf(player?.ID || "");
+  const sortedLeaderboard = Object.entries(leaderboard || {}).sort((a, b) => {
+    const totalWinsA = a[1].Top1_1 + a[1].Top1_2 + a[1].Top1_3 + a[1].Top1_4;
+    const scoreA = Math.round(a[1].Eliminations + totalWinsA * 10);
+
+    const totalWinsB = b[1].Top1_1 + b[1].Top1_2 + b[1].Top1_3 + b[1].Top1_4;
+    const scoreB = Math.round(b[1].Eliminations + totalWinsB * 10);
+
+    return scoreB - scoreA;
+  });
+
+  const sortedLeaderboardIds = sortedLeaderboard.map((d) => d[0]);
+  const playerIdx = sortedLeaderboardIds.indexOf(player?.snapshot.ID || "");
 
   const { data: players, refetch } = useQuery({
     queryKey: ["players"],
-    queryFn: () => queryPlayerInfos(queryClient, lAccountIds.slice(0, visible)),
+    queryFn: () =>
+      queryPlayerInfos(queryClient, sortedLeaderboardIds.slice(0, visible)),
     enabled: !!leaderboard,
   });
 
   useEffect(() => {
-    if (visible > readLeaderboard.length) return;
+    if (visible > sortedLeaderboard.length) return;
     refetch();
   }, [visible]);
 
@@ -72,11 +81,11 @@ const Leaderboards = () => {
       )}
       <section className="nofill">
         <Stat
-          pos={playerIdx + 1}
-          stat={leaderboard[playerIdx]}
+          pos={playerIdx}
+          stat={leaderboard[player?.snapshot.ID || ""]}
           playerInfo={{
-            id: player?.ID || "",
-            displayName: player?.Account.DisplayName || "Player",
+            id: player?.snapshot.ID || "",
+            displayName: player?.snapshot.DisplayName || "Player",
           }}
         />
       </section>
@@ -98,13 +107,13 @@ const Leaderboards = () => {
         transition={{ duration: 0.01 }}
       >
         {!!leaderboard &&
-          readLeaderboard.slice(0, visible).map((d, i) => {
+          sortedLeaderboard.slice(0, visible).map((d, i) => {
             return (
               <Stat
-                key={d.accountId}
+                key={d[0]}
                 pos={i + 1}
-                stat={d}
-                playerInfo={players[d.accountId]}
+                stat={d[1]}
+                playerInfo={players[d[0]]}
               />
             );
           })}
@@ -117,12 +126,7 @@ const Leaderboards = () => {
 
 type StatProps = {
   pos: number;
-  stat: {
-    accountId: string;
-    eliminations: number;
-    wins: number;
-    score: number;
-  };
+  stat: SeasonStat;
   playerInfo: {
     id: string;
     displayName: string;
@@ -138,7 +142,14 @@ const Stat = (props: StatProps) => {
     return "";
   })(props.pos);
 
-  if (!props.playerInfo || !props.stat) return null;
+  const totalWins =
+    props.stat.Top1_1 +
+    props.stat.Top1_2 +
+    props.stat.Top1_3 +
+    props.stat.Top1_4;
+  const score = Math.round(props.stat.Eliminations + totalWins * 10);
+
+  if (!props.playerInfo) return null;
 
   return (
     <motion.div
@@ -148,7 +159,7 @@ const Stat = (props: StatProps) => {
       }}
       transition={{ duration: 0.1, type: "spring", stiffness: 100 }}
       className="stat"
-      key={props.stat.accountId}
+      key={props.stat.ID}
     >
       <div className={"pos " + niceTop}>#{props.pos}</div>
       <div className="name">{props.playerInfo.displayName}</div>
@@ -157,19 +168,24 @@ const Stat = (props: StatProps) => {
         <div className="icon">
           <FaSkull />
         </div>
-        <div className="value">{props.stat.eliminations}</div>
+        <div className="value">{props.stat.Eliminations}</div>
       </div>
       <div className="iconandvalue">
         <div className="icon">
           <FaCrown />
         </div>
-        <div className="value">{props.stat.wins}</div>
+        <div className="value">
+          {props.stat.Top1_1 +
+            props.stat.Top1_2 +
+            props.stat.Top1_3 +
+            props.stat.Top1_4}
+        </div>
       </div>
       <div className="iconandvalue">
         <div className="icon">
           <FaFire />
         </div>
-        <div className="value">{props.stat.score}</div>
+        <div className="value">{score}</div>
       </div>
     </motion.div>
   );

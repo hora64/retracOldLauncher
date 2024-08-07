@@ -1,4 +1,3 @@
-// yes i used one of my old launchers for the shop. i was too lazy to make a new one but it works fine
 import { useEffect, useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useRetracApi } from "src/state/retrac_api";
@@ -12,7 +11,27 @@ import moment from "moment";
 const Dud = () => {
   return (
     <div className="featured-shop-wrapper right">
-      <div className="featured-shop rare"></div>
+      <div className="featured-shop rare">
+        <div className="shop-animate-event">
+          <div className="typeAndTime">
+            <label className="itemType">FETCHING SHOP</label>
+            <label className="itemTime">
+              <FaClock />
+              24 hours
+            </label>
+          </div>
+          <div className="cosmetic">
+            <h2 className="name">PLEASE WAIT</h2>
+            <small className="description"></small>
+            <img
+              src="https://fortnite-api.com/images/cosmetics/br/cid_141_athena_commando_m_darkeagle/featured.png"
+              alt=""
+              className="image"
+              draggable={false}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -31,42 +50,37 @@ const ShopPreview = () => {
     queryFn: queryShop,
   });
 
-  const weekly = shop?.Storefronts.find((s) => s.Name === "BRWeeklyStorefront");
-  const daily = shop?.Storefronts.find((s) => s.Name === "BRDailyStorefront");
-  const offers = [
-    ...(weekly?.DBMtxOffers || []),
-    ...(daily?.DBMtxOffers || []),
-  ];
+  const weekly = shop?.Sections.find((s) => s.Name === "BRWeeklyStorefront");
+  const weeklyOffers = weekly?.Offers || [];
 
   useEffect(() => {
-    if (offers.length === 0) return;
+    if (weeklyOffers.length === 0) return;
     const interval = setInterval(() => {
-      setSelected((s) => (s + 1) % offers.length);
+      setSelected((s) => (s + 1) % weeklyOffers.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [selected, offers]);
+  }, [selected, weeklyOffers]);
 
   useEffect(() => {
     setImageFailed(false);
   }, [selected]);
 
   if (shop === null) return <Dud />;
-  if (offers.length === 0) return <Dud />;
+  if (weeklyOffers.length === 0) return <Dud />;
 
-  const entry = offers[selected];
-  const item = find((entry.Grants[0]?.Template || "").replace("_Retrac", ""));
-  console.log(entry);
+  const entry = weeklyOffers[selected];
+  const item = find((entry.Rewards[0]?.Template || "").replace("_Retrac", ""));
   if (!item) return <Dud />;
   return (
     <div className="featured-shop-wrapper right">
       <div
-        className={`featured-shop ${item.Cosmetic.rarity.backendValue
+        className={`featured-shop ${item.rarity.backendValue
           .split("::")[1]
           .toLowerCase()}`}
       >
         <AnimatePresence>
-          {offers.length > 0 && entry !== null && (
+          {weeklyOffers.length > 0 && entry !== null && (
             <motion.div
               initial={{
                 x: 150,
@@ -85,17 +99,17 @@ const ShopPreview = () => {
                 bounce: 0.4,
               }}
               className="shop-animate-event"
-              key={item.Cosmetic.name}
+              key={item.name}
             >
               <div className="typeAndTime">
                 <label className="itemType">
-                  {item.Cosmetic.rarity.displayValue.toUpperCase()}{" "}
-                  {item.Cosmetic.type.displayValue.toUpperCase()}
+                  {item.rarity.displayValue.toUpperCase()}{" "}
+                  {item.type.displayValue.toUpperCase()}
                 </label>
                 <label className="itemTime">
                   <FaClock />
                   {/* // add 24 hours */}
-                  {moment(shop.Date).add(24, "hours").fromNow()}
+                  {moment(shop.ID).add(24, "hours").fromNow()}
                 </label>
               </div>
               <motion.div
@@ -112,13 +126,11 @@ const ShopPreview = () => {
                 }}
                 className="cosmetic"
               >
-                <h2 className="name">{item.Cosmetic.name}</h2>
-                <small className="description">
-                  {item.Cosmetic.description}
-                </small>
+                <h2 className="name">{item.name}</h2>
+                <small className="description">{item.description}</small>
                 {!image_failed && (
                   <img
-                    src={item.Cosmetic.images.featured}
+                    src={item.images.featured}
                     className="image"
                     draggable={false}
                     alt=""
@@ -127,7 +139,7 @@ const ShopPreview = () => {
                 )}
                 {image_failed && (
                   <img
-                    src={item.Cosmetic.images.icon}
+                    src={item.images.icon}
                     className="image"
                     draggable={false}
                     alt=""
@@ -167,7 +179,7 @@ const ShopPreview = () => {
         </AnimatePresence>
       </div>
       <div className="selector">
-        {offers.map((_, index) => (
+        {weeklyOffers.map((_, index) => (
           <button
             className={`selector-item ${index === selected ? "active" : ""}`}
             onClick={() => setSelected(index)}

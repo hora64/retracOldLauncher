@@ -16,27 +16,18 @@ import Settings from "src/pages/settings";
 import Offline from "src/pages/offline";
 import { FaCog } from "react-icons/fa";
 
-const ROLE_TIERS = [
-  "booster",
-  "fever",
-  "pubg",
-  "gamer",
-  "llama",
-  "creator",
-  "crystal",
-  "ultimate",
-];
-const ROLES = {
-  booster: "Server Booster",
-  fever: "Fever Donator",
-  pubg: "PUBG Donator",
-  gamer: "Gamer Donator",
-  llama: "Llama Donator",
-  creator: "Content Creator",
-  crystal: "Crystal Donator",
-  ultimate: "Ultimate Donator",
-  "": "Member",
-};
+enum ERole {
+  None = "Member",
+  ContentCreator = "Content Creator",
+  PUBGDonator = "PUBG Donator",
+  FeverDonator = "Fever Donator",
+  LlamaDonator = "Llama Donator",
+  GamerDonator = "Gamer Donator",
+  CrystalDonator = "Crystal Donator",
+  RetracPlusDonator = "Retrac Plus Donator",
+  RetracUltimateDonator = "Ultimate Donator",
+  ServerBooster = "Server Booster",
+}
 
 const Frame = () => {
   const config = useConfigControl();
@@ -72,13 +63,21 @@ const Frame = () => {
     })();
   }, [libraryControl.entries]);
 
-  const bestRole = player?.Account.State.Packages.reduce((acc, curr) => {
-    if (ROLE_TIERS.indexOf(curr) > ROLE_TIERS.indexOf(acc)) {
-      return curr;
-    }
-    return acc;
-  }, "");
-  const role = ROLES[bestRole as keyof typeof ROLES];
+  const bestRole = ((): ERole => {
+    if (!player) return ERole.None;
+    const discord = player.snapshot.Discord;
+
+    if (discord.HasRetracUltimateRole) return ERole.RetracUltimateDonator;
+    if (discord.HasRetracPlusRole) return ERole.RetracPlusDonator;
+    if (discord.HasCrystalDonatorRole) return ERole.CrystalDonator;
+    if (discord.HasGamerDonatorRole) return ERole.GamerDonator;
+    if (discord.HasLlamaDonatorRole) return ERole.LlamaDonator;
+    if (discord.HasFeverDonatorRole) return ERole.FeverDonator;
+    if (discord.HasPUBGDonatorRole) return ERole.PUBGDonator;
+    if (discord.HasContentCreatorRole) return ERole.ContentCreator;
+    if (discord.LastBoostedAt != "") return ERole.ServerBooster;
+    return ERole.None;
+  })();
 
   return (
     <div className="tauriFrameContainer">
@@ -121,8 +120,8 @@ const Frame = () => {
             </span>
             <s></s>
             <span data-tauri-drag-region>
-              <strong className={role} data-tauri-drag-region>
-                {role}
+              <strong className={bestRole} data-tauri-drag-region>
+                {bestRole}
               </strong>
             </span>
           </div>

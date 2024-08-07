@@ -19,24 +19,23 @@ const Book = () => {
   return (
     <div
       className={`battleBook ${
-        player?.Account.Stats[14]?.Premium ? "purchased" : ""
+        player?.snapshot.CurrentSeasonStats.BookPurchased ? "purchased" : ""
       }`}
     >
-      {player?.Account.Stats[14]?.Premium ? (
+      {player?.snapshot.CurrentSeasonStats.BookPurchased ? (
         <img className="battlePassImage" src="/battlepass_premium.png" alt="" />
       ) : (
         <img className="battlePassImage" src="/battlepass_free.png" alt="" />
       )}
       <div className="tierInformation">
         <small>
-          {player?.Account.Stats[14]?.Premium ? "BATTLE " : "FREE "}
+          {player?.snapshot.CurrentSeasonStats.BookPurchased
+            ? "BATTLE "
+            : "FREE "}
           PASS
         </small>
         <p>
-          TIER{" "}
-          <strong>
-            {player ? player?.Account.Stats[14]?.TierFreeClaimed : "0"}{" "}
-          </strong>
+          TIER <strong>{player ? player.season.bookLevel : "0"} </strong>
         </p>
       </div>
     </div>
